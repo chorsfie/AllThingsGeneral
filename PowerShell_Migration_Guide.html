@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PowerShell Laptop Migration Guide</title>
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --surface: #2a2a3e;
+      --surface2: #313145;
+      --accent: #0078d4;
+      --accent2: #50fa7b;
+      --warn: #ffb86c;
+      --danger: #ff5555;
+      --text: #cdd6f4;
+      --text-dim: #a6adc8;
+      --code-bg: #12121f;
+      --border: #44475a;
+      --header-bg: #0d1117;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: var(--header-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2rem;
+      border-left: 5px solid var(--accent);
+    }
+
+    header h1 {
+      font-size: 1.9rem;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    header .subtitle {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+    }
+
+    /* Sections */
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.8rem 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    section h2 {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    section h3 {
+      font-size: 1rem;
+      color: var(--warn);
+      margin: 1.2rem 0 0.6rem;
+    }
+
+    p { margin-bottom: 0.8rem; color: var(--text); }
+
+    /* Callout boxes */
+    .callout {
+      border-radius: 8px;
+      padding: 0.9rem 1.2rem;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+    }
+
+    .callout.info  { background: #0d2137; border-left: 4px solid var(--accent); }
+    .callout.warn  { background: #2a1f0d; border-left: 4px solid var(--warn); }
+    .callout.danger{ background: #2a0d0d; border-left: 4px solid var(--danger); }
+    .callout.good  { background: #0d2a14; border-left: 4px solid var(--accent2); }
+
+    .callout .icon { font-size: 1.1rem; margin-top: 0.05rem; flex-shrink: 0; }
+
+    /* Code blocks */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      overflow-x: auto;
+      margin: 0.8rem 0 1rem;
+      position: relative;
+    }
+
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: #f8f8f2;
+    }
+
+    pre code .comment { color: #6272a4; }
+    pre code .keyword { color: #ff79c6; }
+    pre code .string  { color: #f1fa8c; }
+    pre code .cmdlet  { color: #8be9fd; }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.6rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 5px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+    .copy-btn.copied { background: var(--accent2); color: #000; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--accent);
+      text-align: left;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td { background: #25253a; }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.5rem 0.3rem;
+      border-bottom: 1px solid #33334a;
+      font-size: 0.93rem;
+    }
+
+    .checklist li:last-child { border-bottom: none; }
+
+    .checklist input[type="checkbox"] {
+      width: 1.1rem;
+      height: 1.1rem;
+      margin-top: 0.2rem;
+      accent-color: var(--accent2);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .checklist label { cursor: pointer; }
+    .checklist input:checked + label { text-decoration: line-through; color: var(--text-dim); }
+
+    .checklist .group-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.8rem 0 0.2rem;
+      border-bottom: none;
+    }
+
+    /* Steps */
+    .step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+    }
+
+    .step-content { flex: 1; }
+    .step-content h3 { margin-top: 0; color: #fff; font-size: 1rem; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-left: 0.4rem;
+    }
+    .badge.avoid  { background: #3a1010; color: var(--danger); border: 1px solid var(--danger); }
+    .badge.safe   { background: #0d2a14; color: var(--accent2); border: 1px solid var(--accent2); }
+    .badge.system { background: #0d1a2a; color: var(--accent); border: 1px solid var(--accent); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      section { padding: 1.2rem; }
+      header { padding: 1.2rem; }
+      header h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>⚡ PowerShell Laptop Migration Guide</h1>
+    <div class="subtitle">PS 5.1 · PS 7 · VSCode · Corporate OneDrive Builds &nbsp;|&nbsp; Last updated: March 2026</div>
+  </header>
+
+  <!-- WHY THIS HAPPENS -->
+  <section>
+    <h2>🔍 Why This Keeps Happening</h2>
+    <p>Your corporate build <strong>redirects Documents to OneDrive</strong>. PowerShell uses <code>Documents\WindowsPowerShell\Modules</code> as its user-tier module path. On a new laptop, OneDrive syncs down old/stale modules <em>before</em> system modules are properly set up — causing version conflicts and load failures every time.</p>
+
+    <div class="callout warn">
+      <span class="icon">⚠️</span>
+      <div>The classic failure pattern: OneDrive syncs down <strong>PowerShellGet 2.2.5</strong> to the user tier, the new laptop has old <strong>PowerShellGet 1.0.0.1</strong> at the system tier, and <strong>PackageManagement is missing entirely</strong> — resulting in <code>CouldNotAutoloadMatchingModule</code>.</div>
+    </div>
+
+    <h3>Module Path Hierarchy</h3>
+    <table>
+      <thead>
+        <tr><th>Tier</th><th>Path</th><th>Use</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>User</td>
+          <td><code>OneDrive\...\WindowsPowerShell\Modules</code></td>
+          <td><span class="badge avoid">❌ AVOID</span> OneDrive causes conflicts</td>
+        </tr>
+        <tr>
+          <td>System (PS5.1)</td>
+          <td><code>C:\Program Files\WindowsPowerShell\Modules</code></td>
+          <td><span class="badge safe">✅ ALWAYS USE</span></td>
+        </tr>
+        <tr>
+          <td>System (PS7)</td>
+          <td><code>C:\Program Files\PowerShell\Modules</code></td>
+          <td><span class="badge safe">✅ ALWAYS USE</span></td>
+        </tr>
+        <tr>
+          <td>Built-in</td>
+          <td><code>C:\Windows\System32\WindowsPowerShell\v1.0\Modules</code></td>
+          <td><span class="badge system">🚫 NEVER TOUCH</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout good">
+      <span class="icon">✅</span>
+      <div><strong>Golden rule:</strong> Always install modules with <code>-Scope AllUsers</code>. This puts them in <code>Program Files</code> and keeps them completely out of OneDrive.</div>
+    </div>
+  </section>
+
+  <!-- BEFORE YOU LEAVE -->
+  <section>
+    <h2>📦 Before You Hand Back the Old Laptop</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Export Installed Modules List</h3>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># Export all system-level modules to CSV</span>
+Get-Module -ListAvailable | 
+    Where-Object { $_.Path -like "*Program Files*" } |
+    Select-Object Name, Version |
+    Export-Csv "C:\Temp\InstalledModules.csv" -NoTypeInformation</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Backup PowerShell Profiles</h3>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># See all profile paths</span>
+$PROFILE | Select-Object *
+
+<span class="comment"># Copy to safe local location (not OneDrive)</span>
+Copy-Item $PROFILE.CurrentUserAllHosts "C:\Temp\PS_Profile_Backup.ps1"</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Export VSCode Extensions</h3>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>code --list-extensions > "C:\Temp\VSCode_Extensions.txt"</code></pre>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="icon">💡</span>
+      <div>Save these files to a USB stick, email them to yourself, or put them in SharePoint — <strong>not</strong> OneDrive Documents.</div>
+    </div>
+  </section>
+
+  <!-- NEW LAPTOP SETUP -->
+  <section>
+    <h2>🖥️ New Laptop Setup — Do This First</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Fix the OneDrive Module Path Permanently</h3>
+        <p>Open <strong>PowerShell 5.1 as Administrator</strong> and run:</p>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># View current system PSModulePath</span>
+[System.Environment]::GetEnvironmentVariable("PSModulePath", "Machine")
+
+<span class="comment"># Strip OneDrive from it permanently</span>
+$cleanPath = ([System.Environment]::GetEnvironmentVariable("PSModulePath","Machine") -split ';' | 
+    Where-Object { $_ -notlike "*OneDrive*" }) -join ';'
+
+[System.Environment]::SetEnvironmentVariable("PSModulePath", $cleanPath, "Machine")</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Enforce TLS 1.2 (Required on All New Windows Builds)</h3>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Manually Bootstrap PackageManagement</h3>
+        <p>Since <code>Install-Module</code> won't work yet, download manually in your browser:</p>
+        <div class="callout info">
+          <span class="icon">🌐</span>
+          <div>Go to: <strong><a href="https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1" style="color:#0078d4" target="_blank">https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1</a></strong> — it will auto-download. Save to <code>C:\Temp\</code></div>
+        </div>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># Create the target folder</span>
+New-Item -ItemType Directory -Force "C:\Program Files\WindowsPowerShell\Modules\PackageManagement\1.4.8.1"
+
+<span class="comment"># Rename and extract the .nupkg (it's just a zip)</span>
+Copy-Item "C:\Temp\packagemanagement.1.4.8.1.nupkg" "C:\Temp\packagemanagement.zip"
+Expand-Archive "C:\Temp\packagemanagement.zip" -DestinationPath "C:\Program Files\WindowsPowerShell\Modules\PackageManagement\1.4.8.1" -Force
+
+<span class="comment"># Unblock all extracted files</span>
+Get-ChildItem -Recurse "C:\Program Files\WindowsPowerShell\Modules\PackageManagement" | Unblock-File</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Update PowerShellGet</h3>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>Import-Module PackageManagement -Force
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-Module PowerShellGet -Scope AllUsers -Force -AllowClobber</code></pre>
+        <p>Restart PowerShell as Administrator after this step.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h3>Reinstall Your Modules from CSV</h3>
+        <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$modules = Import-Csv "C:\Temp\InstalledModules.csv"
+foreach ($m in $modules) {
+    Write-Host "Installing $($m.Name) $($m.Version)..." -ForegroundColor Cyan
+    Install-Module $m.Name -Scope AllUsers -Force -AllowClobber
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFILE SETUP -->
+  <section>
+    <h2>📝 PowerShell Profile — Add Permanent Protection</h2>
+    <p>Add this to the top of your PS5.1 profile to protect every future session:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># Find your profile path first</span>
+$PROFILE
+
+<span class="comment"># Then edit it and add these lines at the very top:</span>
+
+<span class="comment"># Strip OneDrive from module path to prevent conflicts</span>
+$env:PSModulePath = ($env:PSModulePath -split ';' | 
+    Where-Object { $_ -notlike "*OneDrive*" }) -join ';'
+
+<span class="comment"># Enforce TLS 1.2</span>
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12</code></pre>
+
+    <div class="callout info">
+      <span class="icon">💡</span>
+      <div>Store your profile in <code>C:\Program Files\WindowsPowerShell\</code> or back it up outside OneDrive so it survives laptop changes.</div>
+    </div>
+  </section>
+
+  <!-- VSCODE -->
+  <section>
+    <h2>🔵 VSCode — Extra Considerations</h2>
+
+    <h3>How VSCode Differs from a Normal Terminal</h3>
+    <table>
+      <thead><tr><th>Behaviour</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Own PS session</td><td>The PowerShell extension spins up its own process — it reads <code>PSModulePath</code> from Windows environment at launch, not from your terminal</td></tr>
+        <tr><td>Own profile</td><td>Uses <code>Microsoft.VSCode_profile.ps1</code> — separate from <code>Microsoft.PowerShell_profile.ps1</code></td></tr>
+        <tr><td>PS version</td><td>Can silently use a different PS version — check the bottom-left status bar in VSCode</td></tr>
+        <tr><td>Settings Sync</td><td>Can restore old extension settings from the cloud, similar to the OneDrive module problem</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Harden VSCode's settings.json</h3>
+    <p>Add this to your VSCode <code>settings.json</code> (<kbd>Ctrl+Shift+P</kbd> → <em>Open User Settings JSON</em>) to hardcode a clean module path:</p>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code>{
+    "powershell.powerShellAdditionalExePaths": {
+        "PS7": "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
+    },
+    "powershell.powerShellDefaultVersion": "PS7",
+    "terminal.integrated.env.windows": {
+        "PSModulePath": "C:\\Program Files\\WindowsPowerShell\\Modules;C:\\Program Files\\PowerShell\\Modules;C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\Modules"
+    }
+}</code></pre>
+
+    <div class="callout good">
+      <span class="icon">✅</span>
+      <div>The <code>terminal.integrated.env.windows</code> entry <strong>completely bypasses the OneDrive problem</strong> for VSCode's integrated terminal by hardcoding a clean path.</div>
+    </div>
+
+    <h3>Add the OneDrive Fix to Your VSCode Profile Too</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># Find your VSCode-specific profile</span>
+$PROFILE.CurrentUserCurrentHost  <span class="comment"># run this inside VSCode terminal</span>
+
+<span class="comment"># Add the same protection lines at the top of that file</span>
+$env:PSModulePath = ($env:PSModulePath -split ';' | 
+    Where-Object { $_ -notlike "*OneDrive*" }) -join ';'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12</code></pre>
+
+    <h3>Reinstall VSCode Extensions</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><code><span class="comment"># Bulk reinstall from your saved list</span>
+Get-Content "C:\Temp\VSCode_Extensions.txt" | ForEach-Object {
+    code --install-extension $_
+}</code></pre>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section>
+    <h2>✅ Migration Checklist</h2>
+    <ul class="checklist">
+      <li class="group-label">— On the OLD laptop —</li>
+      <li><input type="checkbox" id="c1"><label for="c1">Export installed modules list to <code>C:\Temp\InstalledModules.csv</code></label></li>
+      <li><input type="checkbox" id="c2"><label for="c2">Backup PowerShell profile(s) to <code>C:\Temp\PS_Profile_Backup.ps1</code></label></li>
+      <li><input type="checkbox" id="c3"><label for="c3">Export VSCode extensions to <code>C:\Temp\VSCode_Extensions.txt</code></label></li>
+      <li><input type="checkbox" id="c4"><label for="c4">Copy all files off machine (USB / SharePoint — NOT OneDrive Documents)</label></li>
+
+      <li class="group-label">— On the NEW laptop (as Administrator) —</li>
+      <li><input type="checkbox" id="c5"><label for="c5">Strip OneDrive from system <code>PSModulePath</code> environment variable</label></li>
+      <li><input type="checkbox" id="c6"><label for="c6">Set TLS 1.2: <code>[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12</code></label></li>
+      <li><input type="checkbox" id="c7"><label for="c7">Manually download and install <code>PackageManagement 1.4.8.1</code></label></li>
+      <li><input type="checkbox" id="c8"><label for="c8">Unblock all PackageManagement files</label></li>
+      <li><input type="checkbox" id="c9"><label for="c9">Install PowerShellGet: <code>Install-Module PowerShellGet -Scope AllUsers -Force -AllowClobber</code></label></li>
+      <li><input type="checkbox" id="c10"><label for="c10">Restart PowerShell as Administrator</label></li>
+      <li><input type="checkbox" id="c11"><label for="c11">Reinstall all modules from CSV with <code>-Scope AllUsers</code></label></li>
+
+      <li class="group-label">— Profiles and VSCode —</li>
+      <li><input type="checkbox" id="c12"><label for="c12">Restore PS profile with OneDrive strip + TLS fix at the top</label></li>
+      <li><input type="checkbox" id="c13"><label for="c13">Add OneDrive strip + TLS fix to VSCode profile (<code>Microsoft.VSCode_profile.ps1</code>)</label></li>
+      <li><input type="checkbox" id="c14"><label for="c14">Add <code>terminal.integrated.env.windows</code> hardcoded path to VSCode <code>settings.json</code></label></li>
+      <li><input type="checkbox" id="c15"><label for="c15">Reinstall VSCode extensions from saved list</label></li>
+
+      <li class="group-label">— Verify —</li>
+      <li><input type="checkbox" id="c16"><label for="c16">Run <code>Get-Module -ListAvailable</code> — confirm no OneDrive paths, no duplicates</label></li>
+      <li><input type="checkbox" id="c17"><label for="c17">Test <code>Install-Module</code> with a small module (e.g. <code>Install-Module Pester -Scope AllUsers</code>)</label></li>
+      <li><input type="checkbox" id="c18"><label for="c18">Confirm VSCode integrated terminal shows correct PS version (bottom-left status bar)</label></li>
+    </ul>
+  </section>
+
+  <footer>
+    PowerShell Laptop Migration Guide &nbsp;·&nbsp; Generated March 2026 &nbsp;·&nbsp; Lloyds Banking Group build (OneDrive redirected Documents)
+  </footer>
+
+</div>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.parentElement;
+    const code = pre.querySelector('code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
